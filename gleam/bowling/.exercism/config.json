@@ -1,0 +1,26 @@
+{
+  "authors": [
+    "massivefermion"
+  ],
+  "contributors": [
+    "lpil"
+  ],
+  "files": {
+    "solution": [
+      "src/bowling.gleam"
+    ],
+    "test": [
+      "test/bowling_test.gleam"
+    ],
+    "example": [
+      ".meta/example.gleam"
+    ],
+    "invalidator": [
+      "gleam.toml",
+      "manifest.toml"
+    ]
+  },
+  "blurb": "Score a bowling game.",
+  "source": "The Bowling Game Kata from UncleBob",
+  "source_url": "https://web.archive.org/web/20221001111000/http://butunclebob.com/ArticleS.UncleBob.TheBowlingGameKata"
+}
