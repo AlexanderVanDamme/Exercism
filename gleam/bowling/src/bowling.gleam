@@ -24,7 +24,7 @@ pub fn is_game_already_complete(game: Game) -> Bool {
 }
 
 pub fn roll(game: Game, knocked_pins: Int) -> Result(Game, Error) {
-  debug(game.frames)
+  // debug(game.frames)
   // a knocked_pins amount should always be higher or equal to zero, to 10
   use <- bool.guard(knocked_pins < 0 || knocked_pins > 10,Error(InvalidPinCount))
   // todo: check if game is complete
@@ -57,6 +57,7 @@ pub fn roll(game: Game, knocked_pins: Int) -> Result(Game, Error) {
     was_complete_most_recent_frame,
     standing_pins_last_frame
   {
+    // throw an error if there are more pins knocked than there were standing pins
     knocked_pins, False, Ok(standing_pins_last_frame) if knocked_pins > standing_pins_last_frame 
     -> Error(InvalidPinCount)
 
@@ -110,14 +111,36 @@ pub fn score(game: Game) -> Result(Int, Error) {
 
   // check for spares and strikes, and use those next throws
 
-  Ok(score_tail_optimized(game.frames,0, 0, 0))
+  Ok(score_tail_optimized(game.frames, 0, 0, 0))
 }
 
-fn score_tail_optimized (frames: List(Frame), score_aggr: Int, _spare_bonus: Int, _strike_bonus: Int) -> Int {
+fn score_tail_optimized (frames: List(Frame), score_aggr: Int, next_throw: Int, nextnext_throw: Int) -> Int {
   case frames {
-    [] -> score_aggr
-    // [10] ->
-    // [a,b] ->
-    _ -> 300
+    // first frame cases
+    [Frame([10], 1)] -> score_aggr + get_score_for_strike(next_throw, nextnext_throw)
+    [Frame([a,b], 1)] if a+b == 10 -> score_aggr + get_score_for_spare(next_throw)
+    [Frame(rolls, 1)] -> score_aggr + int.sum(rolls)
+
+    [Frame([a,b,c], 10), ..rest] 
+    -> { let rolls_this_throw = int.sum([a,b,c])
+      score_tail_optimized(rest, score_aggr + rolls_this_throw + next_throw + nextnext_throw, a, b)}
+
+    [Frame([10],_),..rest] 
+    ->  score_tail_optimized(rest, score_aggr + get_score_for_strike(next_throw, nextnext_throw), 10, next_throw)
+    
+    [Frame([a,b],_),..rest] if a+b == 10 
+    -> score_tail_optimized(rest, score_aggr + get_score_for_spare(next_throw), a, b)
+    
+    [Frame([a,b], _), ..rest] -> { let rolls_this_throw = int.sum([a,b])
+      score_tail_optimized(rest, score_aggr + rolls_this_throw + next_throw + nextnext_throw, a, b)}
+    _ -> {debug(frames) score_aggr}
   }
+}
+
+fn get_score_for_strike(next_throw: Int, nextnext_throw: Int) -> Int{
+  10 + next_throw + nextnext_throw
+}
+
+fn get_score_for_spare(next_throw: Int) -> Int{
+  10 + next_throw 
 }
